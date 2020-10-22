@@ -1,0 +1,18 @@
+version: '3'
+services:
+    php:
+        container_name: t_service_php
+        environment:
+            BASE_URL: http://localhost:88
+        build:
+            dockerfile: ./docker/PHP.Dockerfile
+            context: .
+        volumes:
+            - ./:/app
+    redis:
+        image: redis:latest
+        container_name: t_service_redis
+        restart: always
+
+
+

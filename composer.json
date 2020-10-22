@@ -1,0 +1,32 @@
+{
+    "name": "sportmob/translation-client",
+    "description": "A PHP package to translate phrases for the SportMob project",
+    "type": "library",
+    "require": {
+        "php": "^7.4",
+        "predis/predis": "^1.1.3",
+        "guzzlehttp/guzzle": "6.5.5",
+        "sentry/sdk": "^2.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "9.3.*",
+        "symfony/var-dumper": "4.4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "SportMob\\Translation\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "tests/"
+        ]
+    },
+    "license": "dev",
+    "authors": [
+        {
+            "name": "Meysam Mahmoudi",
+            "email": "m.mahmoudi@tgbsco.com"
+        }
+    ]
+}
