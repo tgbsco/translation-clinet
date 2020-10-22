@@ -22,7 +22,7 @@
             "tests/"
         ]
     },
-    "license": "dev",
+    "license": "MIT",
     "authors": [
         {
             "name": "Meysam Mahmoudi",
