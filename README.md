@@ -2,18 +2,9 @@
 This package is used to call translation service as easy as possible by other services. 
 
 ## Install
-Add following code to your composer.json:
-```json
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "git@git.lan:sportmob/translation-client.git"
-    }
-  ]
+To Install it:
 ```
-Then Install it:
-```
-composer require sportmob/translation:1.0.4
+composer require sportmob/translation-client
 ```
 
 ## Use 
