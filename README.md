@@ -12,31 +12,22 @@ this is a simple example how to use it.
 ```php
 <?php
 
-use SportMob\Translation;
+use SportMob\Translation\Client;
 
-$client = new Client('redis', 6379);
-$keywords = ['Real Madrid', 'Internazionale'];
-$languages = ['ar', 'fa'];
-$translates = $client->translate($keywords, $languages);
-print_r($translates);
+$client = new Client('127.0.0.1', 'redis', 6379);
+$keyword = 'Real Madrid';
+$language = 'fa'; // target language
+$translate = $client->translate($keyword, $language);
+var_dump($translate);
 /*
 result:
 
-{
-    "Internazionale": {
-        "ar": "إنترناسيونالي",
-        "fa": "اینتر میلان"
-    },
-    "Real Madrid": {
-        "ar": "ريال مدريد",
-        "fa": "رئال مادرید"
-    }
-}
+string "رئال مادرید"  
 
 */
 $keyword = 'رئال مادرید';
-$language = 'fa';
-$translates = $client->translate($keyword, $language);
+$language = 'fa';  // origin language
+$translates = $client->search($keyword, $language);
 
 /*
 result:
@@ -46,5 +37,4 @@ result:
     "Real Madrid"
 ]
 */
-
 ``` 

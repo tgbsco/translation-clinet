@@ -33,57 +33,39 @@ class Client
     }
 
     /**
-     * @param array $keywords
-     * @param array $lang
-     * @return array|null
-     * @throws \Exception
-     *
+     * @param string $keyword
+     * @param string $lang
+     * @return string
      */
-    public function translate(array $keywords, array $langs)
+    public function translate(string $keyword, string $lang)
     {
-        $queryParams = [
-            'keywords' => $keywords,
-            'lang' => $langs
-        ];
-
-        if(count($langs) === 1 && $langs[0] === 'en'){
-            $response = [];
-            foreach ($keywords as $keyword){
-                $response[$keyword] = [
-                    'en' => $keyword
-                ];
-            }
-            return $response;
-        }
-
-        $cache = $this->getTranslateCache($keywords, $langs);
-        $countOfRequested = count($queryParams['keywords']);
-        $countOfCacheKeywords = count($cache);
-
-        if ($countOfRequested === $countOfCacheKeywords) { // all keywords' cache exist
+        $cache = $this->getTranslateCache($keyword, $lang);
+        if ( $cache ) {
             return $cache;
-        } elseif ($countOfCacheKeywords > 0) { // some keywords' cache exist
-            $queryParams['keywords'] = array_diff($queryParams['keywords'], array_keys($cache));
         }
+
+        $queryParams = [
+            'keywords' => [$keyword],
+            'lang' => [$lang]
+        ];
 
         try {
             $response = $this->httpClient->get('translate', ['query' => $queryParams] );
             $response = json_decode($response->getBody(), true);
-            // set response to cache
-            $this->setTranslateCache($response);
-            if ($countOfCacheKeywords > 0) {
-                $response = array_merge($response, $cache);
+
+            if ( isset($response[$keyword][$lang]) ) {
+                // set response to cache
+                $this->setTranslateCache($response);
+                $response = $response[$keyword][$lang];
+            }
+            else{
+                $response = $keyword;
             }
         }
         catch (\Exception $e){
-            // server is down, we have to fill response with english translation
+            // server is down, we have to fill response with current translation
             $this->sentryHub->captureException($e);
-            $response = [];
-            foreach ($keywords as $keyword){
-                foreach ($langs as $lang){
-                    $response[$keyword][$lang] = $keyword;
-                }
-            }
+            $response = $keyword;
         }
 
         return $response;
@@ -101,8 +83,10 @@ class Client
             $response = $this->httpClient->get('search', ['query' => $queryParams] );
             $response = json_decode($response->getBody(), true);
 
-            // set response to cache
-            $this->setSearchCache($keyword, $lang, $response);
+            if ( !empty($response) ) {
+                // set response to cache
+                $this->setSearchCache($keyword, $lang, $response);
+            }
         }
         catch (\Exception $e){
             // server is down, we have to fill response with english translation
@@ -133,28 +117,18 @@ class Client
         }
     }
 
-    protected function getTranslateCache(array $keywords, array $langs)
+    protected function getTranslateCache(string $keyword, string $lang)
     {
-        $result = [];
-        foreach ($keywords as $keyword) {
-            foreach ($langs as $lang) {
-                $get = $this->cacheAdapter->get(self::translateFormatKey($keyword, $lang));
-                if (!$get){
-                    break; // if there is no cache for one language, we ignore the keyword
-                }
-                $result[$keyword][$lang] = $get;
-            }
-        }
-        return $result;
+        return $this->cacheAdapter->get(self::translateFormatKey($keyword, $lang));
     }
 
-    public static function translateFormatKey(string $keyword, string $lang, string $separator = '-'): string
+    public static function translateFormatKey(string $keyword, string $lang): string
     {
-        return str_replace(' ', '-', $keyword) . $separator . $lang;
+        return sprintf('translation_service_%s_%s', str_replace(' ', '-', $keyword), $lang);
     }
 
-    public static function searchFormatKey(string $keyword, string $lang, string $separator = '-'): string
+    public static function searchFormatKey(string $keyword, string $lang): string
     {
-        return md5(str_replace(' ', '-', $keyword)) . $separator . $lang;
+        return sprintf('translation_service_search_%s_%s', md5(str_replace(' ', '-', $keyword)), $lang);
     }
 }
