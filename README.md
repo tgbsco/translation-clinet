@@ -22,7 +22,7 @@ $client = new Client($translationServiceBaseUrl, $redisHost, $redisPort);
 $keyword = 'Real Madrid';
 $language = 'fa'; // target language
 
-$translate = $client->getTranslate($keyword, $language);
+$translate = $client->getByLang($keyword, $language);
 var_dump($translate);
 /*
 result:
@@ -31,7 +31,7 @@ string "رئال مادرید"
 
 */
 
-$translates = $client->translateAll($keyword);
+$translates = $client->getAll($keyword);
 /*
 result:
 

@@ -37,7 +37,7 @@ class Client
      * @param string $lang
      * @return string
      */
-    public function getTranslate(string $keyword, string $lang)
+    public function getByLang(string $keyword, string $lang)
     {
         $cache = $this->getTranslateCache($keyword, $lang);
         if ( $cache ) {
@@ -76,7 +76,7 @@ class Client
      * @param string $keyword
      * @return array
      */
-    public function translateAll(string $keyword)
+    public function getAll(string $keyword)
     {
         $cache = $this->getTranslateCache($keyword, 'all');
         if ( $cache ) {

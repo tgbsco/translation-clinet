@@ -24,7 +24,7 @@ class ClientTest extends TestCase
         $this->sentryHub = $this->getMockBuilder(HubInterface::class)->getMock();
     }
 
-    public function testGetTranslateMustCallTranslationServiceApi()
+    public function testGetByLangMustCallTranslationServiceApi()
     {
         (new CacheAdapter('redis'))->flushAll();
 
@@ -33,7 +33,7 @@ class ClientTest extends TestCase
         ]);
         $handlerStack = HandlerStack::create($mock);
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
-        $response = $client->getTranslate("Real Madrid", "fa");
+        $response = $client->getByLang("Real Madrid", "fa");
 
         $this->assertEquals($this->repsonseMock['Real Madrid']['fa'], $response);
 
@@ -45,7 +45,7 @@ class ClientTest extends TestCase
         $this->assertEquals($cacheAdapter->get($cacheKey), $response);
     }
 
-    public function testGetTranslateMustUseCacheInsteadOfTranslationServiceApi()
+    public function testGetByLangMustUseCacheInsteadOfTranslationServiceApi()
     {
         $responseMock = $this->repsonseMock;
         $responseMock['Real Madrid']['fa'] = 'Meysam';
@@ -56,12 +56,12 @@ class ClientTest extends TestCase
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
 
         // this request must read data from cache
-        $response = $client->getTranslate('Real Madrid', 'fa');
+        $response = $client->getByLang('Real Madrid', 'fa');
 
         $this->assertEquals($this->repsonseMock['Real Madrid']['fa'], $response);
     }
 
-    public function testGetTranslateMustCallMissKeywordFromTranslationServiceApi()
+    public function testGetByLangMustCallMissKeywordFromTranslationServiceApi()
     {
         // remove a key from cache
         $del = (new CacheAdapter('redis'))->del(Client::translateFormatKey('Real Madrid', 'fa'));
@@ -76,31 +76,31 @@ class ClientTest extends TestCase
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
 
         // this request must read data from server
-        $response = $client->getTranslate('Real Madrid', 'fa');
+        $response = $client->getByLang('Real Madrid', 'fa');
 
         $this->assertNotEquals($this->repsonseMock['Real Madrid']['fa'], $response);
     }
 
-    public function testGetTranslateMustReturnEnglishIfServerIsDown()
+    public function testGetByLangMustReturnEnglishIfServerIsDown()
     {
         (new CacheAdapter('redis'))->flushAll();
         $client = new Client('', 'redis', 6379,  $this->sentryHub);
-        $response = $client->getTranslate('Real Madrid', 'fa');
+        $response = $client->getByLang('Real Madrid', 'fa');
 
         $this->assertIsString($response);
         $this->assertEquals('Real Madrid', $response);
     }
 
-    public function testGetTranslateMustReturnEnglishIfLangIsEn()
+    public function testGetByLangMustReturnEnglishIfLangIsEn()
     {
         $client = new Client('', 'redis', 6379,  $this->sentryHub);
-        $response = $client->getTranslate('Real Madrid', 'en');
+        $response = $client->getByLang('Real Madrid', 'en');
 
         $this->assertIsString($response);
         $this->assertEquals('Real Madrid', $response);
     }
 
-    public function testTranslateAllMustCallTranslationServiceApi()
+    public function testGetAllMustCallTranslationServiceApi()
     {
         (new CacheAdapter('redis'))->flushAll();
 
@@ -109,7 +109,7 @@ class ClientTest extends TestCase
         ]);
         $handlerStack = HandlerStack::create($mock);
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
-        $response = $client->translateAll("Real Madrid");
+        $response = $client->getAll("Real Madrid");
 
         $this->assertEquals($this->repsonseMock['Real Madrid'], $response);
 
@@ -121,7 +121,7 @@ class ClientTest extends TestCase
         $this->assertEquals(unserialize($cacheResult), $response);
     }
 
-    public function testTranslateAllMustUseCacheInsteadOfTranslationServiceApi()
+    public function testGetAllMustUseCacheInsteadOfTranslationServiceApi()
     {
         $responseMock = $this->repsonseMock;
         $responseMock['Real Madrid']['fa'] = 'Meysam';
@@ -132,7 +132,7 @@ class ClientTest extends TestCase
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
 
         // this request must read data from cache
-        $response = $client->translateAll('Real Madrid');
+        $response = $client->getAll('Real Madrid');
 
         $this->assertEquals($this->repsonseMock['Real Madrid'], $response);
     }
