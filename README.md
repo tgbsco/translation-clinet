@@ -14,10 +14,15 @@ this is a simple example how to use it.
 
 use SportMob\Translation\Client;
 
-$client = new Client('127.0.0.1', 'redis', 6379);
+$translationServiceBaseUrl = 'http://localhost';
+$redisHost = 'redis';
+$redisPort = 6379;
+
+$client = new Client($translationServiceBaseUrl, $redisHost, $redisPort);
 $keyword = 'Real Madrid';
 $language = 'fa'; // target language
-$translate = $client->translate($keyword, $language);
+
+$translate = $client->getTranslate($keyword, $language);
 var_dump($translate);
 /*
 result:
@@ -25,10 +30,21 @@ result:
 string "رئال مادرید"  
 
 */
+
+$translates = $client->translateAll($keyword);
+/*
+result:
+
+[
+  "ar" => "ريال مدريد",
+  "fa" => "رئال مادرید",
+  "en" => "Real Madrid"
+]
+*/
+
 $keyword = 'رئال مادرید';
 $language = 'fa';  // origin language
 $translates = $client->search($keyword, $language);
-
 /*
 result:
 
@@ -37,4 +53,6 @@ result:
     "Real Madrid"
 ]
 */
+
+
 ``` 

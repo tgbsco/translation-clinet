@@ -37,7 +37,7 @@ class Client
      * @param string $lang
      * @return string
      */
-    public function translate(string $keyword, string $lang)
+    public function getTranslate(string $keyword, string $lang)
     {
         $cache = $this->getTranslateCache($keyword, $lang);
         if ( $cache ) {
@@ -68,6 +68,32 @@ class Client
             $response = $keyword;
         }
 
+        return $response;
+    }
+
+    /**
+     * get all available translation languages of the keyword
+     * @param string $keyword
+     * @return array
+     */
+    public function translateAll(string $keyword)
+    {
+        $cache = $this->getTranslateCache($keyword, 'all');
+        if ( $cache ) {
+            return unserialize($cache);
+        }
+
+        $response = [];
+        try {
+            $response = $this->httpClient->get('translate/'.urlencode($keyword) );
+            $response = json_decode($response->getBody(), true);
+
+            $this->setAllTranslateCache($keyword, serialize($response));
+        }
+        catch (\Exception $e){
+            // server is down, we have to fill response with current translation
+            $this->sentryHub->captureException($e);
+        }
         return $response;
     }
 
@@ -115,6 +141,11 @@ class Client
                 $this->cacheAdapter->set(self::translateFormatKey($keyword, $lang), $translation);
             }
         }
+    }
+
+    protected function setAllTranslateCache(string $keyword, string $translation)
+    {
+        $this->cacheAdapter->set(self::translateFormatKey($keyword, 'all'), $translation);
     }
 
     protected function getTranslateCache(string $keyword, string $lang)
