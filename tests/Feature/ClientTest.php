@@ -105,13 +105,13 @@ class ClientTest extends TestCase
         (new CacheAdapter('redis'))->flushAll();
 
         $mock = new MockHandler([
-            new Response(200, [], json_encode($this->repsonseMock['Real Madrid'])),
+            new Response(200, [], json_encode($this->repsonseMock)),
         ]);
         $handlerStack = HandlerStack::create($mock);
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
         $response = $client->getAll("Real Madrid");
 
-        $this->assertEquals($this->repsonseMock['Real Madrid'], $response);
+        $this->assertEquals($this->repsonseMock, $response);
 
         // check cache
         $cacheAdapter = new CacheAdapter('redis');
@@ -126,7 +126,7 @@ class ClientTest extends TestCase
         $responseMock = $this->repsonseMock;
         $responseMock['Real Madrid']['fa'] = 'Meysam';
         $mock = new MockHandler([
-            new Response(200, [], json_encode($responseMock['Real Madrid'])),
+            new Response(200, [], json_encode($responseMock)),
         ]);
         $handlerStack = HandlerStack::create($mock);
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
@@ -134,7 +134,7 @@ class ClientTest extends TestCase
         // this request must read data from cache
         $response = $client->getAll('Real Madrid');
 
-        $this->assertEquals($this->repsonseMock['Real Madrid'], $response);
+        $this->assertEquals($this->repsonseMock, $response);
     }
 
     public function testSearchMustCallTranslationServiceApi()

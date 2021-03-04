@@ -85,7 +85,7 @@ class Client
 
         $response = [];
         try {
-            $response = $this->httpClient->get('translate/'.urlencode($keyword) );
+            $response = $this->httpClient->get('translate', ['query' => ['keyword' => [$keyword]]] );
             $response = json_decode($response->getBody(), true);
 
             $this->setAllTranslateCache($keyword, serialize($response));
