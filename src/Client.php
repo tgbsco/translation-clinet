@@ -33,133 +33,54 @@ class Client
     }
 
     /**
-     * @param string $keyword
+     * @param string $sportmobId
      * @param string $lang
      * @return string
      */
-    public function getByLang(string $keyword, string $lang)
+    public function getByEntityId(string $sportmobId, string $lang): string
     {
-        $cache = $this->getTranslateCache($keyword, $lang);
+        $cache = $this->getTranslateCache($sportmobId, $lang);
         if ( $cache ) {
             return $cache;
         }
 
         $queryParams = [
-            'keywords' => [$keyword],
-            'lang' => [$lang]
+            'id' => $sportmobId,
+            'lang' => $lang
         ];
 
+        $response = null;
         try {
-            $response = $this->httpClient->get('translate', ['query' => $queryParams] );
-            $response = json_decode($response->getBody(), true);
+            $httpRequest = $this->httpClient->get('translate', ['query' => $queryParams] );
+            $HttpResponse = json_decode($httpRequest->getBody(), true);
 
-            if ( isset($response[$keyword][$lang]) ) {
+            if ( isset($HttpResponse[0]) ) {
                 // set response to cache
-                $this->setTranslateCache($response);
-                $response = $response[$keyword][$lang];
-            }
-            else{
-                $response = $keyword;
+                $this->setTranslateCache($sportmobId, $lang, $HttpResponse[0]['translation']);
+                $response = $HttpResponse[0]['translation'];
             }
         }
         catch (\Exception $e){
-            // server is down, we have to fill response with current translation
             $this->sentryHub->captureException($e);
-            $response = $keyword;
         }
 
         return $response;
     }
 
-    /**
-     * get all available translation languages of the keyword
-     * @param string $keyword
-     * @return array
-     */
-    public function getAll(string $keyword)
+
+    protected function setTranslateCache(string $id, string $lang, string $translation)
     {
-        $cache = $this->getTranslateCache($keyword, 'all');
-        if ( $cache ) {
-            return unserialize($cache);
-        }
-
-        $response = [];
-        try {
-            $response = $this->httpClient->get('translate', ['query' => ['keyword' => [$keyword]]] );
-            $response = json_decode($response->getBody(), true);
-
-            $this->setAllTranslateCache($keyword, serialize($response));
-        }
-        catch (\Exception $e){
-            // server is down, we have to fill response with current translation
-            $this->sentryHub->captureException($e);
-        }
-        return $response;
+        $this->cacheAdapter->set(self::translateFormatKey($id, $lang), $translation);
     }
 
-    public function search(string $keyword, string $lang)
+    protected function getTranslateCache(string $id, string $lang)
     {
-        $cache = $this->getSearchCache($keyword, $lang);
-        if ($cache) { // the keyword cache exist
-            return $cache;
-        }
-
-        $queryParams = ['keyword' => $keyword, 'lang' => $lang];
-        try {
-            $response = $this->httpClient->get('search', ['query' => $queryParams] );
-            $response = json_decode($response->getBody(), true);
-
-            if ( !empty($response) ) {
-                // set response to cache
-                $this->setSearchCache($keyword, $lang, $response);
-            }
-        }
-        catch (\Exception $e){
-            // server is down, we have to fill response with english translation
-            $this->sentryHub->captureException($e);
-            $response = [];
-        }
-
-        return $response;
+        return $this->cacheAdapter->get(self::translateFormatKey($id, $lang));
     }
 
-    protected function setSearchCache(string $keyword, string $lang, array $translation)
+    public static function translateFormatKey(string $id, string $lang): string
     {
-        return $this->cacheAdapter->set(self::searchFormatKey($keyword, $lang), json_encode($translation));
-    }
-
-    protected function getSearchCache(string $keyword, string $lang)
-    {
-        $cache = $this->cacheAdapter->get(self::searchFormatKey($keyword, $lang));
-        return $cache ? json_decode($cache, true) : null;
-    }
-
-    protected function setTranslateCache(array $keywordResult)
-    {
-        foreach ($keywordResult as $keyword => $translations) {
-            foreach ($translations as $lang => $translation) {
-                $this->cacheAdapter->set(self::translateFormatKey($keyword, $lang), $translation);
-            }
-        }
-    }
-
-    protected function setAllTranslateCache(string $keyword, string $translation)
-    {
-        $this->cacheAdapter->set(self::translateFormatKey($keyword, 'all'), $translation);
-    }
-
-    protected function getTranslateCache(string $keyword, string $lang)
-    {
-        return $this->cacheAdapter->get(self::translateFormatKey($keyword, $lang));
-    }
-
-    public static function translateFormatKey(string $keyword, string $lang): string
-    {
-        return sprintf('translation_service_%s_%s', str_replace(' ', '-', $keyword), $lang);
-    }
-
-    public static function searchFormatKey(string $keyword, string $lang): string
-    {
-        return sprintf('translation_service_search_%s_%s', md5(str_replace(' ', '-', $keyword)), $lang);
+        return str_replace(['{id}','{lang}'], [$id, $lang],
+            'translation_service_{id}_{lang}');
     }
 }

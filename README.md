@@ -19,40 +19,15 @@ $redisHost = 'redis';
 $redisPort = 6379;
 
 $client = new Client($translationServiceBaseUrl, $redisHost, $redisPort);
-$keyword = 'Real Madrid';
-$language = 'fa'; // target language
+$id = 'qweasdzxcv'; // sportmob id
+$language = 'ar'; // target language
 
-$translate = $client->getByLang($keyword, $language);
+$translate = $client->getByEntityId($id, $language);
 var_dump($translate);
 /*
 result:
 
-string "رئال مادرید"  
+string "ریال مدرید"  
 
 */
-
-$translates = $client->getAll($keyword);
-/*
-result:
-
-[
-  "ar" => "ريال مدريد",
-  "fa" => "رئال مادرید",
-  "en" => "Real Madrid"
-]
-*/
-
-$keyword = 'رئال مادرید';
-$language = 'fa';  // origin language
-$translates = $client->search($keyword, $language);
-/*
-result:
-
-[
-    "Real Madrid CF",
-    "Real Madrid"
-]
-*/
-
-
 ``` 
