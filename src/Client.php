@@ -37,7 +37,7 @@ class Client
      * @param string $lang
      * @return string
      */
-    public function getByEntityId(string $sportmobId, string $lang): string
+    public function getByEntityId(string $sportmobId, string $lang): ?string
     {
         $cache = $this->getTranslateCache($sportmobId, $lang);
         if ( $cache ) {
