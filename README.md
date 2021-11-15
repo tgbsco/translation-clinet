@@ -1,13 +1,13 @@
 # Translation client package
 This package is used to call translation service as easy as possible by other services. 
 
-## Install
+## Installation
 To Install it:
 ```
 composer require sportmob/translation-client
 ```
 
-## Use 
+## Example
 this is a simple example how to use it.
 ```php
 <?php

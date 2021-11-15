@@ -16,7 +16,6 @@ class ClientTest extends TestCase
         0 => [
             "translation" => "ريال مدريد",
             "lang" => "ar",
-            "langId" => "69"
         ]
     ];
     private HubInterface $sentryHub;

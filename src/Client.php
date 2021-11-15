@@ -13,13 +13,15 @@ class Client
     protected CacheAdapter $cacheAdapter;
     protected array $result = [];
     protected HubInterface $sentryHub;
+    protected int $ttl;
 
     public function __construct(
         string $baseUrl,
         string $redisHost,
         int $redisPort = 6379,
         HubInterface $sentryHub,
-        ?HandlerStack $handlerStack = null
+        ?HandlerStack $handlerStack = null,
+        ?int $ttl = null
     ) {
         $this->cacheAdapter = new CacheAdapter($redisHost, $redisPort);
         $this->httpClient = new GuzzleHttp([
@@ -30,6 +32,7 @@ class Client
             'handler' => $handlerStack
         ]);
         $this->sentryHub = $sentryHub;
+        $this->ttl = $ttl ?? 365 * 24 * 3600;
     }
 
     /**
@@ -54,10 +57,10 @@ class Client
             $httpRequest = $this->httpClient->get('translate', ['query' => $queryParams] );
             $HttpResponse = json_decode($httpRequest->getBody(), true);
 
-            if ( isset($HttpResponse[0]) ) {
+            if ( isset($HttpResponse) ) {
                 // set response to cache
-                $this->setTranslateCache($sportmobId, $lang, $HttpResponse[0]['translation']);
-                $response = $HttpResponse[0]['translation'];
+                $this->setTranslateCache($sportmobId, $lang, $HttpResponse['translation']);
+                $response = $HttpResponse['translation'];
             }
         }
         catch (\Exception $e){
@@ -70,17 +73,21 @@ class Client
 
     protected function setTranslateCache(string $id, string $lang, string $translation)
     {
-        $this->cacheAdapter->set(self::translateFormatKey($id, $lang), $translation);
+        $translation = [
+            'translation' => $translation,
+            'lang' => $lang
+        ];
+        $this->cacheAdapter->tags([$lang])->put(self::translateFormatKey($id, $lang), json_encode($translation), $this->ttl);
     }
 
     protected function getTranslateCache(string $id, string $lang)
     {
-        return $this->cacheAdapter->get(self::translateFormatKey($id, $lang));
+        return $this->cacheAdapter->getByTags( self::translateFormatKey($id, $lang), [$lang] );
     }
 
     public static function translateFormatKey(string $id, string $lang): string
     {
         return str_replace(['{id}','{lang}'], [$id, $lang],
-            'translation_service_{id}_{lang}');
+            'translation_{id}_{lang}');
     }
 }
