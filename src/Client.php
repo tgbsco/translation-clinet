@@ -32,7 +32,7 @@ class Client
             'handler' => $handlerStack
         ]);
         $this->sentryHub = $sentryHub;
-        $this->ttl = $ttl ?? 365 * 24 * 3600;
+        $this->ttl = $ttl ?? 30 * 24 * 3600;
     }
 
     /**
@@ -73,16 +73,12 @@ class Client
 
     protected function setTranslateCache(string $id, string $lang, string $translation)
     {
-        $translation = [
-            'translation' => $translation,
-            'lang' => $lang
-        ];
-        $this->cacheAdapter->tags([$lang])->put(self::translateFormatKey($id, $lang), json_encode($translation), $this->ttl);
+        $this->cacheAdapter->set(self::translateFormatKey($id, $lang), $translation);
     }
 
     protected function getTranslateCache(string $id, string $lang)
     {
-        return $this->cacheAdapter->getByTags( self::translateFormatKey($id, $lang), [$lang] );
+        $this->cacheAdapter->get(self::translateFormatKey($id, $lang));
     }
 
     public static function translateFormatKey(string $id, string $lang): string

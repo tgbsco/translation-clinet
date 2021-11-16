@@ -13,10 +13,8 @@ class ClientTest extends TestCase
 {
     private string $sportmobId = 'qweasdzxcv';
     private array $repsonseMock = [
-        0 => [
-            "translation" => "ريال مدريد",
-            "lang" => "ar",
-        ]
+        "translation" => "ريال مدريد",
+        "lang" => "ar",
     ];
     private HubInterface $sentryHub;
 
@@ -35,13 +33,13 @@ class ClientTest extends TestCase
         ]);
         $handlerStack = HandlerStack::create($mock);
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
-        $response = $client->getByEntityId($this->sportmobId, $this->repsonseMock[0]['lang']);
+        $response = $client->getByEntityId($this->sportmobId, $this->repsonseMock['lang']);
 
-        $this->assertEquals($this->repsonseMock[0]['translation'], $response);
+        $this->assertEquals($this->repsonseMock['translation'], $response);
 
         $cacheAdapter = new CacheAdapter('redis');
 
-        $cacheKey = Client::translateFormatKey($this->sportmobId, $this->repsonseMock[0]['lang']);
+        $cacheKey = Client::translateFormatKey($this->sportmobId, $this->repsonseMock['lang']);
 
         // check cache
         $this->assertEquals($cacheAdapter->get($cacheKey), $response);
@@ -50,7 +48,7 @@ class ClientTest extends TestCase
     public function testGetByLangMustUseCacheInsteadOfTranslationServiceApi()
     {
         $responseMock = $this->repsonseMock;
-        $repsonseMock[0]['translation'] = 'Meysam';
+        $repsonseMock['translation'] = 'Meysam';
         $mock = new MockHandler([
             new Response(200, [], json_encode($responseMock)),
         ]);
@@ -58,20 +56,20 @@ class ClientTest extends TestCase
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
 
         // this request must read data from cache
-        $response = $client->getByEntityId($this->sportmobId, $this->repsonseMock[0]['lang']);
+        $response = $client->getByEntityId($this->sportmobId, $this->repsonseMock['lang']);
 
-        $this->assertEquals($this->repsonseMock[0]['translation'], $response);
+        $this->assertEquals($this->repsonseMock['translation'], $response);
     }
 
     public function testGetByLangMustCallMissKeywordFromTranslationServiceApi()
     {
         // remove a key from cache
         $del = (new CacheAdapter('redis'))->del(
-            Client::translateFormatKey($this->sportmobId, $this->repsonseMock[0]['lang']));
+            Client::translateFormatKey($this->sportmobId, $this->repsonseMock['lang']));
         $this->assertTrue($del);
 
         $responseMock = $this->repsonseMock;
-        $repsonseMock[0]['translation'] = 'Meysam';
+        $repsonseMock['translation'] = 'Meysam';
         $mock = new MockHandler([
             new Response(200, [], json_encode($responseMock)),
         ]);
@@ -79,7 +77,7 @@ class ClientTest extends TestCase
         $client = new Client('', 'redis', 6379, $this->sentryHub, $handlerStack);
 
         // this request must read data from server
-        $response = $client->getByEntityId($this->sportmobId, $this->repsonseMock[0]['lang']);
+        $response = $client->getByEntityId($this->sportmobId, $this->repsonseMock['lang']);
 
         $this->assertNotEquals($this->repsonseMock['Real Madrid']['fa'], $response);
     }
